@@ -1,0 +1,74 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="todo-item.html">
+<dom-module id="todo-list">
+    <template>
+        <style>
+            .message-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            h2 {
+                text-align: center;
+                color: #888;
+            }
+
+            img {
+                margin: 0 auto;
+            }
+        </style>
+        <div class="card-container">
+            <div class="message-container">
+                <img src="[[imageUrl]]" alt="happy-face" width="100px">
+                <template is="dom-if" if="[[!hasItems]]">
+                    <h2>No Todos</h2>
+                </template>
+            </div>
+            <template is="dom-repeat" items="[[list]]">
+                <todo-item item="[[item]]"></todo-item>
+            </template>
+        </div>
+
+    </template>
+    <script>
+        Polymer({
+            is: "todo-list",
+            properties: {
+                list: {
+                    type: Array
+                },
+                hasItems: {
+                    type: Boolean,
+                    computed: "computeHasItems(list.length)"
+                },
+                imageUrl: {
+                    type: String,
+                    computed: "computeImageUrl(list.*)"
+                }
+            },
+            computeHasItems: function (length) {
+                return !!length;
+            },
+            computeImageUrl: function () {
+                var len = this.list.length ? this.list.filter(function (item) {
+                    return !item.complete;
+                }).length : 0;
+                switch (len) {
+                    case 0:
+                        return "../images/0.png";
+                    case 1:
+                        return "../images/1.png";
+                    case 2:
+                        return "../images/2.png";
+                    case 3:
+                    case 4:
+                    case 5:
+                        return "../images/3.png";
+                    default:
+                        return "../images/4.png";
+                }
+            }
+        })
+    </script>
+</dom-module>

@@ -1,0 +1,84 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="my-icons.html">
+
+<dom-module id="todo-item">
+    <template>
+        <style>
+             :host {
+                padding: 10px 0;
+                border-bottom: 1px solid #ddd;
+                display: block;
+            }
+
+             :host([completed]) #text {
+                color: #bbb;
+                text-decoration: line-through;
+            }
+
+            paper-checkbox {
+                --paper-checkbox-checked-color: #bbb;
+            }
+
+            #delete {
+                color: #bbb;
+                --paper-icon-button: {
+                    height: 20px;
+                    width: 20px;
+                    padding: 0;
+                }
+            }
+
+            #delete:hover {
+                color: red;
+            }
+
+            [hidden] {
+                display: none;
+            }
+
+            .todo {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+            }
+
+            #text {
+                flex: 1;
+            }
+        </style>
+        <div class="todo">
+            <paper-checkbox on-tap="completeChanged" checked="[[item.complete]]"></paper-checkbox>
+            <span id="text">{{item.text}}</span>
+            <paper-icon-button id="delete" icon="my-icons:close" on-tap="deleteItem" title="Delete todo" hidden$="[[!item.complete]]"></paper-icon-button>
+        </div>
+    </template>
+    <script>
+        Polymer({
+            is: "todo-item",
+            properties: {
+                item: {
+                    type: Object
+                },
+                completed: {
+                    reflectToAttribute: true,
+                    type: Boolean,
+                    computed: "_computeCompleted(item.complete)"
+                }
+            },
+            completeChanged: function () {
+                this.fire("todo-set-complete", {
+                    todo: this.item,
+                    complete: !this.item.complete
+                });
+            },
+            deleteItem: function () {
+                this.fire("todo-delete", this.item);
+            },
+            _computeCompleted: function (completed) {
+                return completed;
+            }
+
+        })
+    </script>
+</dom-module>

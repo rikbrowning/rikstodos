@@ -1,0 +1,184 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/app-layout/app-header/app-header.html">
+<link rel="import" href="../bower_components/app-layout/app-scroll-effects/app-scroll-effects.html">
+<link rel="import" href="../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/iron-image/iron-image.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-app.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-query.html">
+
+<link rel="import" href="my-icons.html">
+<link rel="import" href="todo-list.html">
+
+<dom-module id="my-app">
+  <template>
+    <style>
+       :host {
+        --app-primary-color: #4285f4;
+        --app-secondary-color: black;
+        display: block;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      app-header {
+        color: #fff;
+        background-color: var(--app-primary-color);
+      }
+
+      app-header paper-icon-button {
+        --paper-icon-button-ink-color: white;
+      }
+
+      [main-title] {
+        text-align: center;
+      }
+
+      .center {
+        width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        box-sizing: border-box;
+      }
+
+      .content {
+        background-color: white;
+        flex: 1;
+      }
+
+      paper-input {
+        display: inline-block;
+        flex: 1;
+        --paper-input-container-underline-focus: {
+          border-bottom-color: var(--app-primary-color);
+        }
+        --paper-input-container-label-floating: {
+          color: var(--app-primary-color);
+        }
+      }
+
+      paper-icon-button {
+        color: var(--app-primary-color);
+      }
+
+      .add-container {
+        display: flex;
+        flex-direction: row;
+        align-items: flex-end;
+      }
+
+      #signin {
+        background-color: var(--app-primary-color);
+        margin-top: 20px;
+        color: white;
+      }
+
+      .signin-container {
+        display: flex;
+        height: 100%;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      @media screen and (max-width: 800px) {
+        .center {
+          width: 100%;
+        }
+      }
+    </style>
+
+    <app-header reveals effects="waterfall">
+      <app-toolbar>
+        <div main-title><span>[[user.displayName]]</span> Todos</div>
+      </app-toolbar>
+    </app-header>
+    <div class="center content">
+      <firebase-app name="rikstodos" auth-domain="**" database-url="***" api-key="**"></firebase-app>
+      <firebase-auth app-name="rikstodos" id="auth" user="{{user}}" provider="google">
+      </firebase-auth>
+      <firebase-query app-name="rikstodos" id="todos" path="users/[[user.uid]]/todos" data="{{todos}}"></firebase-query>
+      <template is="dom-if" if="[[!user]]">
+        <div class="signin-container">
+          <iron-image src="../images/signin.png" preload sizing="cover" style="width:100px;height:100px;"></iron-image>
+          <paper-button on-tap="signIn" id="signin">Sign in please</paper-button>
+        </div>
+      </template>
+      <template is="dom-if" if="[[user]]">
+        <todo-list list="[[todos]]"></todo-list>
+        <div class="add-container">
+          <paper-input value="{{newTodo}}" label="Enter Todo" on-keydown="_checkForEnter"></paper-input>
+          <paper-icon-button icon="my-icons:add" on-tap="addTodo" title="Add todo"></paper-icon-button>
+        </div>
+    </div>
+    </template>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'my-app',
+
+      properties: {
+        todos: {
+          type: Array,
+          value: function () {
+            return [];
+          }
+        },
+        user: {
+          type: Object,
+          value: function () {
+            return null;
+          }
+        },
+        newTodo: String
+      },
+      listeners: {
+        "todo-set-complete": "setCompleteTodo",
+        "todo-delete": "deleteTodo"
+      },
+      addTodo: function () {
+        if (this.newTodo) {
+          this.$.todos.ref.push({
+            text: this.newTodo,
+            complete: false
+          });
+          this.newTodo = "";
+        }
+      },
+      setCompleteTodo: function (e) {
+        var item = e.detail.todo,
+          complete = e.detail.complete;
+        this.$.todos.ref.child(item.$key).child("complete").set(complete);
+      },
+      deleteTodo: function (e) {
+        var item = e.detail;
+        this.$.todos.ref.child(item.$key).remove();
+      },
+      signIn: function () {
+        this.$.auth.signInWithPopup();
+      },
+      _checkForEnter: function (e) {
+        if (e.keyCode === 13) {
+          this.addTodo();
+        }
+      }
+
+    });
+  </script>
+</dom-module>
